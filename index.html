@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photographer Profile</title>
 
+<style>
+body{
+    margin:0;
+    font-family: "Helvetica Neue", sans-serif;
+    background:#111;
+    color:#fff;
+    line-height:1.6;
+}
+
+header{
+    height:100vh;
+    background:url("616A0453.jpg") center/cover no-repeat;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+}
+
+header h1{
+    font-size:3rem;
+    background:rgba(0,0,0,0.5);
+    padding:20px 40px;
+    border-radius:10px;
+}
+
+section{
+    padding:80px 10%;
+}
+
+.about{
+    display:flex;
+    flex-wrap:wrap;
+    gap:40px;
+    align-items:center;
+}
+
+.about img{
+    width:350px;
+    border-radius:15px;
+}
+
+.gallery{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.gallery img{
+    width:100%;
+    border-radius:10px;
+    transition:0.3s;
+}
+
+.gallery img:hover{
+    transform:scale(1.05);
+}
+
+footer{
+    text-align:center;
+    padding:30px;
+    background:#000;
+    font-size:0.9rem;
+    opacity:0.7;
+}
+
+@media(max-width:768px){
+    header h1{
+        font-size:2rem;
+    }
+    .about{
+        flex-direction:column;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Photographer</h1>
+</header>
+
+<section>
+    <h2>About</h2>
+    <div class="about">
+        <img src="616A0451.jpg" alt="profile">
+        <div>
+            <p>
+                自然光を活かしたポートレート撮影を得意とするフォトグラファー。<br>
+                ゴールデンアワーの光と影を使い、被写体の魅力を最大限に引き出します。
+            </p>
+            <p>
+                カメラと向き合う真剣な瞬間、<br>
+                シャッターを切る一瞬に全てを込めています。
+            </p>
+        </div>
+    </div>
+</section>
+
+<section>
+    <h2>Gallery</h2>
+    <div class="gallery">
+        <img src="616A0431.jpg" alt="">
+        <img src="616A0429.jpg" alt="">
+        <img src="616A0428.jpg" alt="">
+    </div>
+</section>
+
+<footer>
+    © 2026 Photographer Portfolio
+</footer>
+
+</body>
+</html>
