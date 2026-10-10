@@ -1,121 +1,667 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Photographer Profile</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>花粉散布するだけ</title>
 <style>
-body{
-    margin:0;
-    font-family: "Helvetica Neue", sans-serif;
-    background:#111;
-    color:#fff;
-    line-height:1.6;
-}
-
-header{
-    height:100vh;
-    background:url("616A0453.jpg") center/cover no-repeat;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-}
-
-header h1{
-    font-size:3rem;
-    background:rgba(0,0,0,0.5);
-    padding:20px 40px;
-    border-radius:10px;
-}
-
-section{
-    padding:80px 10%;
-}
-
-.about{
-    display:flex;
-    flex-wrap:wrap;
-    gap:40px;
-    align-items:center;
-}
-
-.about img{
-    width:350px;
-    border-radius:15px;
-}
-
-.gallery{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
-}
-
-.gallery img{
-    width:100%;
-    border-radius:10px;
-    transition:0.3s;
-}
-
-.gallery img:hover{
-    transform:scale(1.05);
-}
-
-footer{
-    text-align:center;
-    padding:30px;
-    background:#000;
-    font-size:0.9rem;
-    opacity:0.7;
-}
-
-@media(max-width:768px){
-    header h1{
-        font-size:2rem;
-    }
-    .about{
-        flex-direction:column;
-    }
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#e8eee5;color:#29382e}
+#scene{position:fixed;inset:0}
+canvas{display:block}
+.glass{background:rgba(255,255,255,.88);border:1px solid #ffffffd9;box-shadow:0 8px 30px #263a2812;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px}
+header{position:fixed;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;gap:8px;pointer-events:none}
+.brand,.status{padding:11px 14px;display:flex;align-items:center;gap:11px;pointer-events:auto}
+h1{font-size:14px;margin:0 0 4px}
+.sub{font-size:10px;color:#78867b}
+.statlabel{font-size:10px;color:#78867b;margin-bottom:3px}
+.statvalue{font-size:16px;font-weight:750}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#75ad7c;margin-right:5px}
+.panel{position:fixed;padding:15px;display:flex;flex-direction:column;gap:12px}
+#left{left:14px;top:85px;width:205px}
+#right{right:14px;bottom:14px;width:220px}
+.label{font-size:10px;letter-spacing:1px;color:#78867b;font-weight:750}
+.big{font-size:29px;font-weight:800;letter-spacing:-1px}
+.progress{height:6px;background:#e7ebe4;border-radius:10px;overflow:hidden;margin-top:8px}
+#progressFill{height:100%;width:0;background:linear-gradient(90deg,#a8c88b,#edc64d)}
+.row{display:flex;justify-content:space-between;gap:8px;font-size:12px}
+.row span{color:#78867b}
+hr{border:0;border-top:1px solid #e6ebe4;width:100%;margin:0}
+button{border:0;border-radius:12px;padding:12px;font:inherit;font-weight:700;cursor:pointer}
+button:active{transform:scale(.985)}
+.primary{background:#507b5d;color:white}
+.secondary{background:#edf1eb;color:#344b3a}
+#scatterButton{width:100%;font-size:13px}
+#scatterButton small{display:block;font-size:10px;font-weight:500;margin-top:4px}
+.controls{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;font-size:11px}
+kbd{font:inherit;font-size:10px;padding:4px 6px;background:#f0f2ed;border:1px solid #e2e7df;border-radius:6px}
+#toast{position:fixed;top:85px;left:50%;transform:translate(-50%,-8px);opacity:0;background:#29382eeb;color:white;padding:11px 16px;border-radius:12px;font-size:12px;pointer-events:none;transition:.2s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.screen{position:fixed;inset:0;display:grid;place-items:center;background:#e8eee56b;backdrop-filter:blur(5px)}
+.card{width:min(370px,calc(100% - 32px));padding:26px;text-align:center}
+.card h2{font-size:21px;margin:0 0 10px}
+.card p{font-size:12px;color:#78867b;line-height:1.9;margin:0 0 18px}
+.card button{width:100%;margin-top:7px}
+#pauseScreen{display:none}
+@media(max-width:600px){
+ header{top:8px;left:8px;right:8px}
+ .brand,.status{padding:8px;gap:7px}
+ h1{font-size:11px}
+ .sub{font-size:9px}
+ .statvalue{font-size:13px}
+ #left{left:8px;top:70px;width:155px;padding:10px;gap:9px}
+ #right{right:8px;bottom:8px;width:178px;padding:10px;gap:9px}
+ .big{font-size:23px}
 }
 </style>
 </head>
-
 <body>
+<div id="scene"></div>
 
 <header>
-    <h1>Photographer</h1>
+ <div class="brand glass"><div><h1>花粉散布するだけ</h1></div></div>
+ <div class="status glass">
+  <div><div class="statlabel">STATUS</div><div class="statvalue"><span class="dot"></span><span id="runLabel">待機中</span></div></div>
+  <div><div class="statlabel">経過時間</div><div class="statvalue" id="time">00:00</div></div>
+ </div>
 </header>
 
-<section>
-    <h2>About</h2>
-    <div class="about">
-        <img src="616A0451.jpg" alt="profile">
-        <div>
-            <p>
-                自然光を活かしたポートレート撮影を得意とするフォトグラファー。<br>
-                ゴールデンアワーの光と影を使い、被写体の魅力を最大限に引き出します。
-            </p>
-            <p>
-                カメラと向き合う真剣な瞬間、<br>
-                シャッターを切る一瞬に全てを込めています。
-            </p>
-        </div>
-    </div>
+<section id="left" class="panel glass">
+ <div class="label">都市の拡散状況</div>
+ <div><span id="coverage" class="big">0.0</span><span style="font-size:12px;color:#78867b"> %</span></div>
+ <div class="progress"><div id="progressFill"></div></div>
+ <div class="sub">花粉が到達した地表エリア</div>
+ <hr>
+ <div class="row"><span>散布回数</span><strong id="scatterCount">0 回</strong></div>
+ <div class="row"><span>風向</span><strong>北西 → 南東</strong></div>
+ <div class="row"><span>風速</span><strong>2.4 m/s</strong></div>
 </section>
 
-<section>
-    <h2>Gallery</h2>
-    <div class="gallery">
-        <img src="616A0431.jpg" alt="">
-        <img src="616A0429.jpg" alt="">
-        <img src="616A0428.jpg" alt="">
-    </div>
+<section id="right" class="panel glass">
+ <div class="label">操作パネル</div>
+ <button id="scatterButton" class="primary">花粉を散布<small>クリックして粒子を放出</small></button>
+ <hr>
+ <div class="controls"><span>移動</span><span><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></span></div>
+ <div class="controls"><span>高速移動</span><kbd>Shift</kbd></div>
+ <div class="controls"><span>一時停止</span><kbd>Esc</kbd></div>
+ <button id="resetButton" class="secondary">リセット</button>
 </section>
 
-<footer>
-    © 2026 Photographer Portfolio
-</footer>
+<div id="toast"></div>
 
+<div id="startScreen" class="screen">
+ <div class="card glass">
+  <h2>街に花粉を広げよう</h2>
+  <p>上空から街を見渡し、花粉を散布して拡散の様子を観察します。建物の上も自由に移動できます。</p>
+  <button id="startButton" class="primary">シミュレーション開始</button>
+ </div>
+</div>
+
+<div id="pauseScreen" class="screen">
+ <div class="card glass">
+  <h2>一時停止中</h2>
+  <p>シミュレーションは停止しています。</p>
+  <button id="resumeButton" class="primary">再開する</button>
+  <button id="pauseResetButton" class="secondary">最初からやり直す</button>
+ </div>
+</div>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#e8eee5');
+scene.fog=new THREE.Fog('#e8eee5',210,470);
+
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.1;
+$('scene').appendChild(renderer.domElement);
+
+const camera=new THREE.OrthographicCamera();
+camera.up.set(0,0,-1);
+scene.add(new THREE.HemisphereLight(0xffffff,0xa2b19b,2.1));
+
+const sun=new THREE.DirectionalLight(0xfff4df,2.8);
+sun.position.set(-100,160,90);
+sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-150,right:150,top:150,bottom:-150});
+scene.add(sun);
+
+function mat(color,roughness=.9){return new THREE.MeshStandardMaterial({color,roughness})}
+const M={
+ ground:mat('#dfe6da'),road:mat('#adb8b0'),walk:mat('#eae9df'),
+ line:mat('#f7f4e9'),park:mat('#cbdcbe'),trunk:mat('#927b60'),
+ roof:mat('#d1d6ce'),roofDark:mat('#aeb9b1'),
+ glass:mat('#91b4b4'),glass2:mat('#c0d2cb')
+};
+
+const city=new THREE.Group();
+scene.add(city);
+
+function box(parent,x,y,z,w,h,d,material,shadow=true){
+ const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);
+ o.position.set(x,y,z);o.castShadow=shadow;o.receiveShadow=true;
+ parent.add(o);return o;
+}
+function cylinder(parent,x,y,z,r1,r2,h,material,n=9){
+ const o=new THREE.Mesh(new THREE.CylinderGeometry(r1,r2,h,n),material);
+ o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o;
+}
+function sphere(parent,x,y,z,r,material){
+ const o=new THREE.Mesh(new THREE.SphereGeometry(r,9,7),material);
+ o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o;
+}
+
+let seed=58312;
+function rand(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+function pick(a){return a[Math.floor(rand()*a.length)]}
+
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),M.ground);
+ground.rotation.x=-Math.PI/2;ground.position.y=-.4;ground.receiveShadow=true;scene.add(ground);
+
+// 道路と道路標示
+const step=54;
+for(let i=-5;i<=5;i++){
+ const p=i*step;
+ box(city,p,-.17,0,12,.18,480,M.road,false);
+ box(city,0,-.17,p,480,.18,12,M.road,false);
+ box(city,p,-.065,0,.15,.025,470,M.line,false);
+ box(city,0,-.065,p,470,.025,.15,M.line,false);
+
+ for(let z=-225;z<=225;z+=13){
+  box(city,p-2,-.04,z,.11,.025,2.6,M.line,false);
+  box(city,p+2,-.04,z,.11,.025,2.6,M.line,false);
+ }
+ for(let x=-225;x<=225;x+=13){
+  box(city,x,-.04,p-2,2.6,.025,.11,M.line,false);
+  box(city,x,-.04,p+2,2.6,.025,.11,M.line,false);
+ }
+ for(const side of [-1,1]){
+  box(city,p+side*6.5,-.07,0,.75,.12,480,M.walk,false);
+  box(city,0,-.07,p+side*6.5,480,.12,.75,M.walk,false);
+ }
+ for(let n=-3;n<=3;n++){
+  if(!n)continue;
+  box(city,p+n*.7,-.025,p-8,.36,.025,3.5,M.line,false);
+  box(city,p-8,-.025,p+n*.7,3.5,.025,.36,M.line,false);
+ }
+}
+
+// 建物・樹木
+const facades=['#d8d4c9','#c7d0ca','#e0d9cb','#c0cbc7','#ddd9d0','#c7c6bc','#d6dcd5','#c8c0b5'];
+const roofs=['#c0c8c0','#adb8b0','#d0cec3','#bac2bb'];
+const leaves=['#79a478','#93b47e','#a6bd8c','#729a75'];
+
+function addTree(x,z,size=1){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ cylinder(g,0,.9*size,0,.16*size,.23*size,1.8*size,M.trunk,7);
+ const leaf=()=>mat(pick(leaves));
+ sphere(g,0,2.05*size,0,1.05*size,leaf());
+ sphere(g,.5*size,2.32*size,.15*size,.75*size,leaf());
+ sphere(g,-.45*size,2.24*size,-.18*size,.75*size,leaf());
+ city.add(g);
+}
+
+function addBuilding(x,z,w,d,floors){
+ const h=floors*(2.5+rand()*.18);
+ const g=new THREE.Group();g.position.set(x,0,z);
+ box(g,0,h/2,0,w,h,d,mat(pick(facades)));
+ box(g,0,h+.1,0,w+.22,.22,d+.22,pick(roofs));
+ box(g,0,h+.3,-d/2,w,.42,.16,M.roofDark);
+ box(g,0,h+.3,d/2,w,.42,.16,M.roofDark);
+ box(g,-w/2,h+.3,0,.16,.42,d,M.roofDark);
+ box(g,w/2,h+.3,0,.16,.42,d,M.roofDark);
+
+ const windowMat=pick([M.glass,M.glass2]);
+ const rows=Math.floor(h/2.8);
+ const cols=Math.max(2,Math.floor(w/1.55));
+ for(let r=0;r<rows;r++){
+  const wy=1.05+r*2.65;if(wy>h-.45)break;
+  for(let c=0;c<cols;c++){
+   const wx=-w/2+(c+.5)*w/cols;
+   box(g,wx,wy,d/2+.02,w/cols*.55,.88,.035,windowMat,false);
+   box(g,wx,wy,-d/2-.02,w/cols*.55,.88,.035,windowMat,false);
+  }
+  const sideCols=Math.max(2,Math.floor(d/1.7));
+  for(let c=0;c<sideCols;c++){
+   const wz=-d/2+(c+.5)*d/sideCols;
+   box(g,w/2+.02,wy,wz,.035,.88,d/sideCols*.55,windowMat,false);
+   box(g,-w/2-.02,wy,wz,.035,.88,d/sideCols*.55,windowMat,false);
+  }
+ }
+ for(let i=0,n=2+Math.floor(rand()*4);i<n;i++){
+  const rx=(rand()-.5)*(w-1.5),rz=(rand()-.5)*(d-1.5);
+  if(rand()<.68){
+   box(g,rx,h+.52,rz,1.25,.65,1.1,M.roofDark);
+   box(g,rx,h+.88,rz,1.3,.08,1.15,M.roof);
+  }else cylinder(g,rx,h+.65,rz,.35,.4,.7,M.roofDark,10);
+ }
+ if(rand()<.4)cylinder(g,w*.25,h+1,-d*.2,.07,.1,1.6,M.roofDark,6);
+ box(g,0,.95,d/2+.025,1.25,1.9,.06,M.glass,false);
+ city.add(g);
+}
+
+for(let gx=-5;gx<=5;gx++){
+ for(let gz=-5;gz<=5;gz++){
+  const bx=gx*step,bz=gz*step;
+  if(rand()<.16){
+   box(city,bx,-.23,bz,42,.12,42,M.park,false);
+   box(city,bx,-.14,bz,2,.05,36,M.walk,false);
+   box(city,bx,-.13,bz,35,.05,1.8,M.walk,false);
+   for(let i=0;i<18;i++){
+    const tx=bx+(rand()-.5)*34,tz=bz+(rand()-.5)*34;
+    if(Math.abs(tx-bx)<2.5||Math.abs(tz-bz)<2.5)continue;
+    addTree(tx,tz,.8+rand()*.45);
+   }
+   continue;
+  }
+  const count=2+Math.floor(rand()*4);
+  for(let n=0;n<count;n++){
+   const x=bx+(rand()-.5)*28,z=bz+(rand()-.5)*28;
+   const w=5+rand()*9,d=5+rand()*9;
+   const central=Math.abs(gx)<=1&&Math.abs(gz)<=1;
+   const floors=central?6+Math.floor(rand()*16):1+Math.floor(rand()*7);
+   addBuilding(x,z,w,d,floors);
+  }
+ }
+}
+
+// 街路樹
+for(let gx=-5;gx<=5;gx++){
+ for(let gz=-5;gz<=5;gz++){
+  for(const side of [-1,1]){
+   for(let n=0;n<3;n++){
+    if(rand()<.45)continue;
+    addTree(gx*step+side*8.2,gz*step-13+n*13,.7+rand()*.25);
+   }
+  }
+ }
+}
+
+// 駐車中の車
+const carPaint=['#f2efe5','#9eafa8','#c7b9a5','#84978f','#d8d8ce','#b9c7ca'];
+const wheelMat=mat('#626b65');
+for(let i=0;i<190;i++){
+ const horizontal=rand()<.5,lane=Math.floor(rand()*9)-4,along=(rand()-.5)*430;
+ const x=horizontal?along:lane*step+(rand()<.5?-4:4);
+ const z=horizontal?lane*step+(rand()<.5?-4:4):along;
+ const g=new THREE.Group();g.position.set(x,.05,z);
+ if(horizontal)g.rotation.y=Math.PI/2;
+ box(g,0,.38,0,1.85,.62,3.8,mat(pick(carPaint)),false);
+ box(g,0,.76,-.1,1.38,.35,1.8,M.glass,false);
+ for(const side of [-1,1])for(const end of [-1,1]){
+  cylinder(g,side*.95,.19,end*1.1,.22,.22,.13,wheelMat,8).rotation.z=Math.PI/2;
+ }
+ city.add(g);
+}
+
+// 花粉の到達範囲
+const GRID=120,CELL=4.1;
+const coverageData=new Float32Array(GRID*GRID);
+const coverCanvas=document.createElement('canvas');
+coverCanvas.width=GRID;coverCanvas.height=GRID;
+const coverCtx=coverCanvas.getContext('2d');
+const coverTexture=new THREE.CanvasTexture(coverCanvas);
+coverTexture.colorSpace=THREE.SRGBColorSpace;
+const coverMesh=new THREE.Mesh(
+ new THREE.PlaneGeometry(GRID*CELL,GRID*CELL),
+ new THREE.MeshBasicMaterial({map:coverTexture,transparent:true,opacity:.8,depthWrite:false})
+);
+coverMesh.rotation.x=-Math.PI/2;coverMesh.position.y=.035;scene.add(coverMesh);
+
+function markCoverage(x,z,radius){
+ const cx=Math.floor((x+GRID*CELL/2)/CELL);
+ const cz=Math.floor((z+GRID*CELL/2)/CELL);
+ const rr=Math.ceil(radius/CELL);
+ for(let dz=-rr;dz<=rr;dz++)for(let dx=-rr;dx<=rr;dx++){
+  const gx=cx+dx,gz=cz+dz;
+  if(gx<0||gz<0||gx>=GRID||gz>=GRID)continue;
+  const distance=Math.hypot(dx,dz);
+  if(distance>rr)continue;
+  const index=gz*GRID+gx;
+  coverageData[index]=Math.min(1,coverageData[index]+.22*Math.max(.12,1-distance/(rr+1)));
+ }
+}
+function refreshCoverage(){
+ const image=coverCtx.createImageData(GRID,GRID);let covered=0;
+ for(let i=0;i<coverageData.length;i++){
+  const v=coverageData[i],j=i*4;
+  image.data[j]=231;image.data[j+1]=179;image.data[j+2]=43;
+  image.data[j+3]=Math.min(170,Math.floor(v*145));
+  if(v>.12)covered++;
+ }
+ coverCtx.putImageData(image,0,0);coverTexture.needsUpdate=true;
+ return covered/(GRID*GRID)*100;
+}
+function refreshCoverageUI(){
+ const value=refreshCoverage();
+ $('coverage').textContent=value.toFixed(1);
+ $('progressFill').style.width=Math.min(100,value)+'%';
+}
+
+// 中央の黄色い塊と、その周囲を飛び回る粒
+const player=new THREE.Group();
+const markerGroup=new THREE.Group();
+const markerMaterial=new THREE.MeshBasicMaterial({
+ color:'#ffd52e',depthTest:false,depthWrite:false
+});
+
+// 中央の塊は残す
+const centerPollen=new THREE.Mesh(
+ new THREE.SphereGeometry(.65,16,12),
+ markerMaterial
+);
+centerPollen.position.set(0,2.1,0);
+centerPollen.renderOrder=999;
+markerGroup.add(centerPollen);
+
+// 周囲の粒を大量に作り、一粒ずつ独立して動かす
+const markerParticles=[];
+const markerParticleGeometry=new THREE.SphereGeometry(1,7,5);
+const markerParticleMaterial=new THREE.MeshBasicMaterial({
+ color:'#ffd52e',
+ transparent:true,
+ opacity:.97,
+ depthTest:false,
+ depthWrite:false
+});
+const MARKER_PARTICLE_COUNT=650;
+
+for(let i=0;i<MARKER_PARTICLE_COUNT;i++){
+ const particle=new THREE.Mesh(
+  markerParticleGeometry,
+  markerParticleMaterial
+ );
+ particle.renderOrder=1000;
+
+ const size=.135+Math.random()*.250;
+ particle.scale.setScalar(size);
+
+ const angle=Math.random()*Math.PI*2;
+ const radius=.5+Math.random()*9;
+ const direction=Math.random()<.5?-1:1;
+
+ const p={
+  mesh:particle,
+  angle,
+  radius,
+  size,
+  direction,
+  angularSpeed:direction*(.8+Math.random()*3.2),
+  radialSpeed:1.8+Math.random()*10,
+  height:.45+Math.random()*4.8,
+  heightPhase:Math.random()*Math.PI*2,
+  heightSpeed:1+Math.random()*4,
+  phase:Math.random()*Math.PI*2,
+  wobble:Math.random()*Math.PI*2,
+  wobbleSpeed:1.5+Math.random()*5,
+  maxRadius:7+Math.random()*12,
+  burstDelay:Math.random()*3,
+  burstPower:5+Math.random()*14,
+  driftX:(Math.random()-.5)*2,
+  driftZ:(Math.random()-.5)*2
+ };
+
+ // 粒の初期位置も個別にずらす
+ particle.position.set(
+  Math.cos(angle)*radius,
+  p.height,
+  Math.sin(angle)*radius
+ );
+
+ markerGroup.add(particle);
+ markerParticles.push(p);
+}
+
+player.add(markerGroup);
+scene.add(player);
+
+// 散布する花粉
+const pollenGroup=new THREE.Group();scene.add(pollenGroup);
+const pollenGeometry=new THREE.SphereGeometry(.17,7,6);
+const pollenMaterial=new THREE.MeshStandardMaterial({
+ color:'#f4ca42',emissive:'#b18312',emissiveIntensity:.38,roughness:.55
+});
+const pollen=[];
+const wind=new THREE.Vector3(.65,0,.43);
+const FIXED_ALTITUDE=35;
+
+let elapsed=0,scatterCount=0,running=false,paused=false;
+let lastTime=performance.now(),coverTimer=0;
+const keys={};
+
+function showToast(message){
+ const el=$('toast');el.textContent=message;el.classList.add('show');
+ clearTimeout(showToast.timer);
+ showToast.timer=setTimeout(()=>el.classList.remove('show'),1400);
+}
+
+function scatterAtPlayer(){
+ if(!running||paused)return;
+ for(let i=0;i<190;i++){
+  const mesh=new THREE.Mesh(pollenGeometry,pollenMaterial);
+  mesh.position.set(
+   player.position.x+(Math.random()-.5)*1.3,
+   FIXED_ALTITUDE+(Math.random()-.5)*1.5,
+   player.position.z+(Math.random()-.5)*1.3
+  );
+  const angle=Math.random()*Math.PI*2,speed=10+Math.random()*23;
+  const velocity=new THREE.Vector3(
+   Math.cos(angle)*speed+wind.x*2,
+   1+Math.random()*9,
+   Math.sin(angle)*speed+wind.z*2
+  );
+  pollenGroup.add(mesh);
+  pollen.push({
+   mesh,velocity,age:0,life:5+Math.random()*8,
+   phase:Math.random()*Math.PI*2,size:.65+Math.random()*1.45
+  });
+ }
+ scatterCount++;
+ $('scatterCount').textContent=scatterCount+' 回';
+ markCoverage(player.position.x,player.position.z,10);
+ refreshCoverageUI();
+ showToast('花粉を散布しました');
+}
+
+function updateCamera(){
+ const height=155,aspect=innerWidth/innerHeight;
+ camera.left=-height*aspect/2;
+ camera.right=height*aspect/2;
+ camera.top=height/2;
+ camera.bottom=-height/2;
+ camera.near=.1;camera.far=650;
+ camera.position.set(player.position.x,260,player.position.z);
+ camera.up.set(0,0,-1);
+ camera.lookAt(player.position.x,0,player.position.z);
+ camera.updateProjectionMatrix();
+}
+
+function startGame(){
+ elapsed=0;scatterCount=0;
+ player.position.set(0,0,0);
+
+ // 中央の塊は移動させず、周囲の粒の初期状態だけ整える
+ markerGroup.position.set(0,0,0);
+ markerGroup.rotation.set(0,0,0);
+
+ for(const p of pollen)pollenGroup.remove(p.mesh);
+ pollen.length=0;
+ coverageData.fill(0);
+ coverCtx.clearRect(0,0,GRID,GRID);
+ coverTexture.needsUpdate=true;
+ $('coverage').textContent='0.0';
+ $('progressFill').style.width='0%';
+ $('scatterCount').textContent='0 回';
+ $('time').textContent='00:00';
+ $('startScreen').style.display='none';
+ $('pauseScreen').style.display='none';
+ paused=false;running=true;
+ $('runLabel').textContent='稼働中';
+ lastTime=performance.now();updateCamera();
+ showToast('シミュレーション開始');
+}
+function pauseGame(){
+ if(!running||paused)return;
+ paused=true;$('pauseScreen').style.display='grid';
+ $('runLabel').textContent='一時停止';
+}
+function resumeGame(){
+ paused=false;$('pauseScreen').style.display='none';
+ $('runLabel').textContent='稼働中';
+ lastTime=performance.now();
+}
+
+$('startButton').addEventListener('click',startGame);
+$('resumeButton').addEventListener('click',resumeGame);
+$('resetButton').addEventListener('click',startGame);
+$('pauseResetButton').addEventListener('click',startGame);
+$('scatterButton').addEventListener('click',scatterAtPlayer);
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(e.button===0)scatterAtPlayer();
+});
+window.addEventListener('keydown',e=>{
+ const k=e.key.toLowerCase();keys[k]=true;
+ if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();
+ if(k==='escape'){
+  if(paused)resumeGame();else pauseGame();
+ }
+});
+window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
+window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
+window.addEventListener('resize',()=>{
+ renderer.setSize(innerWidth,innerHeight);updateCamera();
+});
+
+// 中央の塊は固定。周囲の粒だけが大量に広がって舞い散る
+function updateMarkerParticles(dt,t){
+ centerPollen.position.set(0,2.1+Math.sin(t*2.5)*.08,0);
+ centerPollen.scale.setScalar(1+Math.sin(t*3.6)*.045);
+
+ for(const p of markerParticles){
+  // 粒ごとに異なる角度・速度で回転
+  p.angle+=p.angularSpeed*dt;
+
+  // ときどき中心から勢いよく広がる
+  p.burstDelay-=dt;
+  if(p.burstDelay<=0){
+   p.radialSpeed=5+Math.random()*15;
+   p.burstDelay=1.4+Math.random()*3.8;
+   p.maxRadius=8+Math.random()*13;
+  }
+
+  p.radius+=p.radialSpeed*dt;
+
+  // 広がりながら、個別の揺れや流れを加える
+  p.radius+=Math.sin(t*p.wobbleSpeed+p.wobble)*1.5*dt;
+  p.radialSpeed*=Math.pow(.985,dt*60);
+  p.radialSpeed=Math.max(1.3,p.radialSpeed);
+
+  // 十分に広がった粒は中心近くに戻し、また飛び出させる
+  if(p.radius>p.maxRadius){
+   p.radius=.25+Math.random()*1.4;
+   p.angle=Math.random()*Math.PI*2;
+   p.radialSpeed=7+Math.random()*15;
+   p.maxRadius=8+Math.random()*13;
+   p.height=.4+Math.random()*4.8;
+   p.heightPhase=Math.random()*Math.PI*2;
+   p.driftX=(Math.random()-.5)*2;
+   p.driftZ=(Math.random()-.5)*2;
+  }
+
+  const swirl=Math.sin(t*2.7+p.wobble)*.9;
+  const radius=Math.max(.2,p.radius);
+
+  const x=
+   Math.cos(p.angle)*radius+
+   Math.cos(p.angle*2+t*2.1)*swirl+
+   p.driftX*Math.sin(t*.8+p.phase);
+
+  const z=
+   Math.sin(p.angle)*radius+
+   Math.sin(p.angle*2+t*2.1)*swirl+
+   p.driftZ*Math.cos(t*.9+p.phase);
+
+  const y=
+   p.height+
+   Math.sin(t*p.heightSpeed+p.heightPhase)*1.15+
+   Math.sin(t*3.3+p.wobble)*.35;
+
+  // 塊ごとではなく、粒一つずつ座標を更新する
+  p.mesh.position.set(x,y,z);
+
+  // 粒ごとに異なるタイミングで明滅・サイズ変化
+  const pulse=.7+.3*Math.sin(t*5.5+p.phase);
+  p.mesh.scale.setScalar(p.size*pulse);
+ }
+}
+
+function animate(now){
+ requestAnimationFrame(animate);
+ const dt=Math.min((now-lastTime)/1000,.05);
+ lastTime=now;
+ const t=now*.001;
+
+ // 中央の塊の位置・回転は変更しない
+ updateMarkerParticles(dt,t);
+
+ if(running&&!paused){
+  elapsed+=dt;
+  const speed=keys.shift?38:20;
+  let dx=0,dz=0;
+  if(keys.w||keys.arrowup)dz-=1;
+  if(keys.s||keys.arrowdown)dz+=1;
+  if(keys.a||keys.arrowleft)dx-=1;
+  if(keys.d||keys.arrowright)dx+=1;
+  const length=Math.hypot(dx,dz)||1;
+  player.position.x=THREE.MathUtils.clamp(player.position.x+dx/length*speed*dt,-230,230);
+  player.position.z=THREE.MathUtils.clamp(player.position.z+dz/length*speed*dt,-230,230);
+  updateCamera();
+
+  for(let i=pollen.length-1;i>=0;i--){
+   const p=pollen[i];p.age+=dt;
+   const burst=Math.max(0,1-p.age/.85);
+   p.velocity.x+=wind.x*2.1*dt;
+   p.velocity.z+=wind.z*2.1*dt;
+   p.velocity.x*=Math.pow(.985,dt*60);
+   p.velocity.z*=Math.pow(.985,dt*60);
+   p.velocity.x+=Math.sin(now*.003+p.phase)*1.8*dt;
+   p.velocity.z+=Math.cos(now*.0025+p.phase)*1.8*dt;
+   p.velocity.y-=2.3*dt;
+   p.mesh.position.addScaledVector(p.velocity,dt);
+   p.mesh.position.x+=Math.sin(now*.006+p.phase)*.035;
+   p.mesh.position.z+=Math.cos(now*.005+p.phase)*.035;
+   const fade=Math.max(0,1-p.age/p.life);
+   p.mesh.scale.setScalar(p.size*fade*(.65+burst*.75));
+   p.mesh.rotation.x+=dt*3;p.mesh.rotation.z+=dt*4;
+   if(p.mesh.position.y<=.3||p.age>=p.life){
+    markCoverage(p.mesh.position.x,p.mesh.position.z,3.8);
+    pollenGroup.remove(p.mesh);pollen.splice(i,1);
+   }
+  }
+
+  coverTimer+=dt;
+  if(coverTimer>.9){coverTimer=0;refreshCoverageUI()}
+  const mins=Math.floor(elapsed/60).toString().padStart(2,'0');
+  const secs=Math.floor(elapsed%60).toString().padStart(2,'0');
+  $('time').textContent=mins+':'+secs;
+ }
+
+ renderer.render(scene,camera);
+}
+
+updateCamera();
+requestAnimationFrame(animate);
+</script>
 </body>
 </html>
